@@ -1,158 +1,97 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
-import Header from "@/components/Header";
-import PostCard from "@/components/PostCard";
-import { TrendingUp, Zap, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { useState } from "react";
+import Header from "./Header";
+import PostCard from "./PostCard";
 import type { Post, Category, SiteSettings } from "@/lib/types";
-import type { Lang } from "@/lib/i18n";
-import { t } from "@/lib/i18n";
 
-interface HomeClientProps {
-  posts: Post[];
-  categories: Category[];
-  settings: SiteSettings;
-}
+const CATEGORY_ICONS: Record<string, string> = {
+  life: "🌿", travel: "✈️", food: "🍜", money: "💰", tech: "💻",
+  beauty: "💄", health: "💪", parenting: "👶", pets: "🐾",
+  interior: "🏠", review: "⭐", issue: "🔥",
+};
 
-export default function HomeClient({ posts, categories, settings }: HomeClientProps) {
-  const [lang, setLang] = useState<Lang>("ko");
+export default function HomeClient({ posts, categories, settings }: {
+  posts: Post[]; categories: Category[]; settings: SiteSettings;
+}) {
   const [activeCat, setActiveCat] = useState("all");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [page, setPage] = useState(1);
-  const PER_PAGE = 12;
+  const [lang, setLang] = useState("ko");
 
-  useEffect(() => {
-    const saved = localStorage.getItem("blog_lang") as Lang;
-    if (saved) setLang(saved);
-    const params = new URLSearchParams(window.location.search);
-    const cat = params.get("cat");
-    if (cat) setActiveCat(cat);
-  }, []);
-
-  const handleLang = (l: Lang) => {
-    setLang(l);
-    localStorage.setItem("blog_lang", l);
-  };
-
-  const featured = useMemo(() => posts.filter((p) => p.featured).slice(0, 3), [posts]);
-
-  const filtered = useMemo(() => {
-    if (activeCat === "all") return posts;
-    const cat = categories.find((c) => c.slug === activeCat);
-    return cat ? posts.filter((p) => p.category === cat.id) : posts;
-  }, [posts, categories, activeCat]);
-
-  const paginated = filtered.slice(0, page * PER_PAGE);
-  const hasMore = paginated.length < filtered.length;
+  const filtered = activeCat === "all" ? posts : posts.filter(p => p.category === activeCat);
+  const featured = filtered[0];
+  const secondary = filtered.slice(1, 4);
+  const rest = filtered.slice(4);
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
-      <Header settings={settings} categories={categories} lang={lang} onLangChange={handleLang} />
+    <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
+      <Header lang={lang} onLangChange={() => setLang(lang === "ko" ? "en" : "ko")} />
 
-      {/* Hero Banner */}
-      <section className="relative pt-24 pb-16 px-4 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-1/4 w-72 h-72 rounded-full opacity-10 blur-3xl" style={{ background: "var(--brand)" }} />
-          <div className="absolute top-40 right-1/4 w-64 h-64 rounded-full opacity-8 blur-3xl" style={{ background: "#3b82f6" }} />
-        </div>
-        <div className="max-w-7xl mx-auto text-center relative">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-6" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", color: "var(--brand)" }}>
-            <Zap className="w-3.5 h-3.5" />
-            {lang === "ko" ? "매일 새로운 글 업데이트" : "Daily updated content"}
-          </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight" style={{ color: "var(--fg)" }}>
-            {lang === "ko" ? settings.siteNameKo || settings.siteName : settings.siteName}
-          </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto" style={{ color: "var(--fg2)" }}>
-            {lang === "ko" ? settings.taglineKo || settings.tagline : settings.tagline}
-          </p>
-        </div>
-      </section>
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
 
-      {/* Featured Posts */}
-      {featured.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 mb-12">
-          <div className="flex items-center gap-2 mb-5">
-            <TrendingUp className="w-5 h-5" style={{ color: "var(--brand)" }} />
-            <h2 className="text-xl font-black" style={{ color: "var(--fg)" }}>{t[lang].featuredPosts}</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {featured.map((post) => (
-              <PostCard key={post.id} post={post} categories={categories} lang={lang} featured />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Category Filter + Posts */}
-      <section className="max-w-7xl mx-auto px-4 mb-16">
-        {/* 카테고리 탭 */}
-        <div className="flex items-center justify-between mb-5 gap-4">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none flex-1">
-            <button
-              onClick={() => { setActiveCat("all"); setPage(1); }}
-              className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-              style={activeCat === "all" ? { background: "var(--brand)", color: "white" } : { background: "var(--card)", color: "var(--fg2)", border: "1px solid var(--border)" }}
-            >
-              🗂️ {t[lang].all}
+        {/* 카테고리 필터 */}
+        <div style={{ display: "flex", gap: 8, padding: "20px 0", overflowX: "auto", borderBottom: "1px solid var(--border)" }}>
+          <button onClick={() => setActiveCat("all")}
+            style={{ padding: "6px 16px", fontSize: 12, fontWeight: 700, border: "1px solid var(--fg)", background: activeCat === "all" ? "var(--fg)" : "transparent", color: activeCat === "all" ? "var(--bg)" : "var(--fg)", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}>
+            전체
+          </button>
+          {categories.map(cat => (
+            <button key={cat.id} onClick={() => setActiveCat(cat.id)}
+              style={{ padding: "6px 16px", fontSize: 12, fontWeight: 600, border: "1px solid var(--border)", background: activeCat === cat.id ? "var(--fg)" : "transparent", color: activeCat === cat.id ? "var(--bg)" : "var(--fg2)", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}>
+              {CATEGORY_ICONS[cat.id]} {cat.name}
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => { setActiveCat(cat.slug); setPage(1); }}
-                className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-                style={activeCat === cat.slug
-                  ? { background: cat.color, color: "white" }
-                  : { background: "var(--card)", color: "var(--fg2)", border: "1px solid var(--border)" }
-                }
-              >
-                {cat.icon} {lang === "ko" ? cat.name : cat.nameEn}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button onClick={() => setViewMode("grid")} className="w-9 h-9 flex items-center justify-center rounded-xl transition-all" style={viewMode === "grid" ? { background: "var(--brand)", color: "white" } : { color: "var(--fg2)" }}>
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button onClick={() => setViewMode("list")} className="w-9 h-9 flex items-center justify-center rounded-xl transition-all" style={viewMode === "list" ? { background: "var(--brand)", color: "white" } : { color: "var(--fg2)" }}>
-              <List className="w-4 h-4" />
-            </button>
-          </div>
+          ))}
         </div>
 
-        {/* 글 목록 */}
-        {filtered.length === 0 ? (
-          <div className="text-center py-20" style={{ color: "var(--fg2)" }}>
-            <p className="text-5xl mb-4">📭</p>
-            <p className="text-lg font-semibold">{t[lang].noPost}</p>
-          </div>
-        ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {paginated.map((post) => (
-              <PostCard key={post.id} post={post} categories={categories} lang={lang} featured />
-            ))}
+        {posts.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "80px 0", color: "var(--fg3)" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📰</div>
+            <div style={{ fontSize: 18, fontFamily: "'Noto Serif KR', serif", fontWeight: 700, color: "var(--fg2)", marginBottom: 8 }}>아직 게시된 글이 없습니다</div>
+            <div style={{ fontSize: 14 }}>BlogAuto Pro에서 첫 번째 글을 발행해보세요</div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {paginated.map((post) => (
-              <PostCard key={post.id} post={post} categories={categories} lang={lang} />
-            ))}
-          </div>
-        )}
+          <>
+            {/* 메인 레이아웃 - 신문 그리드 */}
+            {featured && (
+              <div style={{ padding: "32px 0", borderBottom: "1px solid var(--border)" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 340px", gap: 0 }}>
+                  {/* 메인 피처 */}
+                  <div style={{ paddingRight: 32 }}>
+                    <PostCard post={featured} view="grid" />
+                  </div>
 
-        {/* 더 보기 */}
-        {hasMore && (
-          <div className="text-center mt-10">
-            <button onClick={() => setPage((p) => p + 1)} className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all hover:opacity-90" style={{ background: "var(--brand)", color: "white" }}>
-              {t[lang].readMore} <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-      </section>
+                  {/* 구분선 */}
+                  <div style={{ background: "var(--border)" }} />
 
-      {/* Footer */}
-      <footer className="border-t py-10 text-center text-sm" style={{ borderColor: "var(--border)", color: "var(--fg2)" }}>
-        <p className="font-bold mb-1" style={{ color: "var(--fg)" }}>{settings.siteName}</p>
-        <p>{settings.footerText}</p>
+                  {/* 사이드 3개 */}
+                  <div style={{ paddingLeft: 32 }}>
+                    {secondary.map((post, i) => (
+                      <div key={post.id} style={{ borderBottom: i < secondary.length - 1 ? "1px solid var(--border)" : "none", paddingBottom: i < secondary.length - 1 ? 16 : 0, marginBottom: i < secondary.length - 1 ? 16 : 0 }}>
+                        <PostCard post={post} view="list" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 추가 글 그리드 */}
+            {rest.length > 0 && (
+              <div style={{ padding: "32px 0" }}>
+                <div style={{ borderTop: "2px solid var(--fg)", borderBottom: "1px solid var(--fg)", padding: "4px 0", marginBottom: 24 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--fg3)" }}>더 많은 기사</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "32px 24px" }}>
+                  {rest.map(post => <PostCard key={post.id} post={post} view="grid" />)}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* 푸터 */}
+      <footer style={{ borderTop: "3px solid var(--fg)", marginTop: 48, padding: "32px 24px", textAlign: "center" }}>
+        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 900, marginBottom: 8 }}>TarryGuide</div>
+        <div style={{ fontSize: 12, color: "var(--fg3)" }}>{settings.footerText || "© 2026 TarryGuide. All rights reserved."}</div>
       </footer>
     </div>
   );

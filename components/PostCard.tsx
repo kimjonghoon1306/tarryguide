@@ -1,87 +1,81 @@
 import Link from "next/link";
-import Image from "next/image";
-import { Eye, Clock, Tag } from "lucide-react";
-import { format } from "date-fns";
-import { ko, enUS } from "date-fns/locale";
-import type { Post, Category } from "@/lib/types";
-import type { Lang } from "@/lib/i18n";
-import { t, calcReadTime } from "@/lib/i18n";
+import type { Post } from "@/lib/types";
+import { formatDistanceToNow } from "date-fns";
+import { ko } from "date-fns/locale";
 
-interface PostCardProps {
-  post: Post;
-  categories: Category[];
-  lang: Lang;
-  featured?: boolean;
-}
+const CATEGORY_NAMES: Record<string, string> = {
+  life: "라이프", travel: "여행", food: "맛집/음식", money: "재테크",
+  tech: "IT/테크", beauty: "뷰티/패션", health: "건강/운동",
+  parenting: "육아", pets: "반려동물", interior: "인테리어",
+  review: "리뷰", issue: "이슈/트렌드",
+};
 
-export default function PostCard({ post, categories, lang, featured = false }: PostCardProps) {
-  const category = categories.find((c) => c.id === post.category);
-  const readTime = calcReadTime(post.content);
-  const locale = lang === "ko" ? ko : enUS;
-  const dateStr = format(new Date(post.createdAt), lang === "ko" ? "yyyy. M. d." : "MMM d, yyyy", { locale });
+const PLACEHOLDER_COLORS: Record<string, string> = {
+  life: "#22c55e", travel: "#3b82f6", food: "#f97316", money: "#eab308",
+  tech: "#8b5cf6", beauty: "#ec4899", health: "#14b8a6",
+  parenting: "#f43f5e", pets: "#a16207", interior: "#0ea5e9",
+  review: "#f59e0b", issue: "#ef4444",
+};
 
-  if (featured) {
-    return (
-      <Link href={`/${post.slug}`} className="group block">
-        <article className="relative rounded-2xl overflow-hidden card-hover" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-          {post.thumbnail && (
-            <div className="relative h-56 overflow-hidden">
-              <Image src={post.thumbnail} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              {category && (
-                <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold text-white" style={{ background: category.color }}>
-                  {category.icon} {lang === "ko" ? category.name : category.nameEn}
-                </span>
-              )}
-              {post.featured && (
-                <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-400 text-yellow-900">
-                  ⭐ Featured
-                </span>
-              )}
-            </div>
-          )}
-          <div className="p-5">
-            <h2 className="font-bold text-lg leading-snug mb-2 group-hover:text-green-500 transition-colors line-clamp-2" style={{ color: "var(--fg)" }}>
-              {post.title}
-            </h2>
-            <p className="text-sm line-clamp-2 mb-4" style={{ color: "var(--fg2)" }}>{post.excerpt}</p>
-            <div className="flex items-center justify-between text-xs" style={{ color: "var(--fg2)" }}>
-              <span>{dateStr}</span>
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{post.views || 0}</span>
-                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{readTime}{t[lang].minute}</span>
-              </div>
-            </div>
-          </div>
-        </article>
-      </Link>
-    );
-  }
+export function PostCardLarge({ post }: { post: Post }) {
+  const color = PLACEHOLDER_COLORS[post.category] || "#888";
+  const catName = CATEGORY_NAMES[post.category] || post.category;
+  const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ko }) : "";
 
   return (
-    <Link href={`/${post.slug}`} className="group block">
-      <article className="flex gap-4 p-4 rounded-2xl card-hover" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-        {post.thumbnail && (
-          <div className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden">
-            <Image src={post.thumbnail} alt={post.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          {category && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold mb-1.5 px-2 py-0.5 rounded-full" style={{ background: `${category.color}20`, color: category.color }}>
-              {category.icon} {lang === "ko" ? category.name : category.nameEn}
-            </span>
+    <Link href={`/${post.slug}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+      <article>
+        {/* 썸네일 */}
+        <div style={{ aspectRatio: "16/9", background: post.thumbnail ? "none" : color, marginBottom: 16, overflow: "hidden", position: "relative" }}>
+          {post.thumbnail ? (
+            <img src={post.thumbnail} alt={post.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(135deg, ${color}22, ${color}44)` }}>
+              <span style={{ fontSize: 48 }}>
+                {post.category === "life" ? "🌿" : post.category === "travel" ? "✈️" : post.category === "food" ? "🍜" : post.category === "money" ? "💰" : post.category === "tech" ? "💻" : post.category === "beauty" ? "💄" : post.category === "health" ? "💪" : post.category === "parenting" ? "👶" : post.category === "pets" ? "🐾" : post.category === "interior" ? "🏠" : post.category === "review" ? "⭐" : "🔥"}
+              </span>
+            </div>
           )}
-          <h3 className="font-semibold text-sm leading-snug mb-1 group-hover:text-green-500 transition-colors line-clamp-2" style={{ color: "var(--fg)" }}>
-            {post.title}
-          </h3>
-          <div className="flex items-center gap-2 text-xs" style={{ color: "var(--fg2)" }}>
-            <span>{dateStr}</span>
-            <span>·</span>
-            <span className="flex items-center gap-0.5"><Eye className="w-3 h-3" />{post.views || 0}</span>
-          </div>
+        </div>
+        <div style={{ borderTop: `3px solid ${color}`, paddingTop: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>{catName}</div>
+          <h2 style={{ fontFamily: "'Noto Serif KR', serif", fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 700, lineHeight: 1.35, color: "var(--fg)", marginBottom: 10 }}>{post.title}</h2>
+          <p style={{ fontSize: 14, color: "var(--fg2)", lineHeight: 1.6, marginBottom: 12, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.excerpt}</p>
+          <div style={{ fontSize: 12, color: "var(--fg3)" }}>{timeAgo} · {post.author || "TarryGuide"}</div>
         </div>
       </article>
     </Link>
   );
+}
+
+export function PostCardSmall({ post }: { post: Post }) {
+  const color = PLACEHOLDER_COLORS[post.category] || "#888";
+  const catName = CATEGORY_NAMES[post.category] || post.category;
+  const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ko }) : "";
+
+  return (
+    <Link href={`/${post.slug}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+      <article style={{ display: "flex", gap: 14, padding: "14px 0", borderBottom: "1px solid var(--border)" }}>
+        {/* 썸네일 작게 */}
+        <div style={{ width: 90, height: 68, flexShrink: 0, overflow: "hidden", background: post.thumbnail ? "none" : `linear-gradient(135deg, ${color}22, ${color}44)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {post.thumbnail ? (
+            <img src={post.thumbnail} alt={post.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <span style={{ fontSize: 24 }}>
+              {post.category === "life" ? "🌿" : post.category === "travel" ? "✈️" : post.category === "food" ? "🍜" : post.category === "money" ? "💰" : post.category === "tech" ? "💻" : post.category === "beauty" ? "💄" : post.category === "health" ? "💪" : post.category === "parenting" ? "👶" : post.category === "pets" ? "🐾" : post.category === "interior" ? "🏠" : post.category === "review" ? "⭐" : "🔥"}
+            </span>
+          )}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>{catName}</div>
+          <h3 style={{ fontFamily: "'Noto Serif KR', serif", fontSize: 14, fontWeight: 700, lineHeight: 1.4, color: "var(--fg)", marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.title}</h3>
+          <div style={{ fontSize: 11, color: "var(--fg3)" }}>{timeAgo}</div>
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+export default function PostCard({ post, view }: { post: Post; view?: string }) {
+  return view === "list" ? <PostCardSmall post={post} /> : <PostCardLarge post={post} />;
 }

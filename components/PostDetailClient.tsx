@@ -84,7 +84,7 @@ export default function PostDetailClient({ post, related, categories, settings }
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
-      <Header settings={settings} categories={categories} lang={lang} onLangChange={handleLang} />
+      <Header lang={lang} onLangChange={() => handleLang(lang === "ko" ? "en" : "ko")} />
 
       {/* 썸네일 히어로 */}
       {post.thumbnail && (
@@ -150,7 +150,7 @@ export default function PostDetailClient({ post, related, categories, settings }
               <section className="mt-14">
                 <h3 className="text-xl font-black mb-5" style={{ color: "var(--fg)" }}>{t[lang].relatedPosts}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {related.map((p) => <PostCard key={p.id} post={p} categories={categories} lang={lang} featured />)}
+                  {related.map((p) => <PostCard key={p.id} post={p} view="grid" />)}
                 </div>
               </section>
             )}

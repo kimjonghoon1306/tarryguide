@@ -1,59 +1,64 @@
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 import type { Post, Category, SiteSettings } from "./types";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const cast = <T>(v: any): T => v as T;
+function getRedis() {
+  return new Redis({
+    url: process.env.KV_REST_API_URL!,
+    token: process.env.KV_REST_API_TOKEN!,
+  });
+}
 
 // ─── Posts ───────────────────────────────────────────────
 export async function getAllPosts(): Promise<Post[]> {
-  const ids = await kv.smembers("posts:ids");
+  const redis = getRedis();
+  const ids = await redis.smembers("posts:ids");
   if (!ids || ids.length === 0) return [];
-  const posts = await Promise.all(ids.map((id) => kv.hgetall(`post:${id}`)));
-  return posts
-    .filter(Boolean)
-    .map((p) => cast<Post>(p))
+  const posts = await Promise.all(ids.map((id) => redis.hgetall(`post:${id}`)));
+  return (posts.filter(Boolean) as unknown as Post[])
     .filter((p) => p.published)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getAllPostsAdmin(): Promise<Post[]> {
-  const ids = await kv.smembers("posts:ids");
+  const redis = getRedis();
+  const ids = await redis.smembers("posts:ids");
   if (!ids || ids.length === 0) return [];
-  const posts = await Promise.all(ids.map((id) => kv.hgetall(`post:${id}`)));
-  return posts
-    .filter(Boolean)
-    .map((p) => cast<Post>(p))
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const posts = await Promise.all(ids.map((id) => redis.hgetall(`post:${id}`)));
+  return (posts.filter(Boolean) as unknown as Post[]).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const id = await kv.get(`slug:${slug}`);
+  const redis = getRedis();
+  const id = await redis.get(`slug:${slug}`);
   if (!id) return null;
-  const post = await kv.hgetall(`post:${id}`);
-  return post ? cast<Post>(post) : null;
+  return redis.hgetall(`post:${id}`) as unknown as Post;
 }
 
 export async function savePost(post: Post): Promise<void> {
-  await kv.hset(`post:${post.id}`, post as unknown as Record<string, unknown>);
-  await kv.sadd("posts:ids", post.id);
-  await kv.set(`slug:${post.slug}`, post.id);
+  const redis = getRedis();
+  await redis.hset(`post:${post.id}`, post as unknown as Record<string, unknown>);
+  await redis.sadd("posts:ids", post.id);
+  await redis.set(`slug:${post.slug}`, post.id);
   if (post.category) {
-    await kv.sadd(`cat:${post.category}:posts`, post.id);
+    await redis.sadd(`cat:${post.category}:posts`, post.id);
   }
 }
 
 export async function deletePost(id: string): Promise<void> {
-  const raw = await kv.hgetall(`post:${id}`);
-  if (!raw) return;
-  const post = cast<Post>(raw);
-  await kv.del(`post:${id}`);
-  await kv.srem("posts:ids", id);
-  await kv.del(`slug:${post.slug}`);
-  if (post.category) await kv.srem(`cat:${post.category}:posts`, id);
+  const redis = getRedis();
+  const post = await redis.hgetall(`post:${id}`) as unknown as Post | null;
+  if (!post) return;
+  await redis.del(`post:${id}`);
+  await redis.srem("posts:ids", id);
+  await redis.del(`slug:${post.slug}`);
+  if (post.category) await redis.srem(`cat:${post.category}:posts`, id);
 }
 
 export async function incrementViews(id: string): Promise<void> {
-  await kv.hincrby(`post:${id}`, "views", 1);
+  const redis = getRedis();
+  await redis.hincrby(`post:${id}`, "views", 1);
 }
 
 // ─── Categories ──────────────────────────────────────────
@@ -73,16 +78,18 @@ export const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 export async function getCategories(): Promise<Category[]> {
-  const data = await kv.get("categories");
+  const redis = getRedis();
+  const data = await redis.get("categories");
   if (!data) {
-    await kv.set("categories", DEFAULT_CATEGORIES);
+    await redis.set("categories", JSON.stringify(DEFAULT_CATEGORIES));
     return DEFAULT_CATEGORIES;
   }
-  return cast<Category[]>(data);
+  return typeof data === "string" ? JSON.parse(data) : data as Category[];
 }
 
 export async function saveCategories(categories: Category[]): Promise<void> {
-  await kv.set("categories", categories);
+  const redis = getRedis();
+  await redis.set("categories", JSON.stringify(categories));
 }
 
 // ─── Site Settings ────────────────────────────────────────
@@ -99,11 +106,13 @@ const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const data = await kv.get("site:settings");
+  const redis = getRedis();
+  const data = await redis.get("site:settings");
   if (!data) return DEFAULT_SETTINGS;
-  return { ...DEFAULT_SETTINGS, ...cast<SiteSettings>(data) };
+  return typeof data === "string" ? { ...DEFAULT_SETTINGS, ...JSON.parse(data) } : { ...DEFAULT_SETTINGS, ...(data as SiteSettings) };
 }
 
 export async function saveSiteSettings(settings: SiteSettings): Promise<void> {
-  await kv.set("site:settings", settings);
+  const redis = getRedis();
+  await redis.set("site:settings", JSON.stringify(settings));
 }

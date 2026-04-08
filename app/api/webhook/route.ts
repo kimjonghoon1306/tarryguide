@@ -17,15 +17,6 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function stripInlineMarkdown(value: string): string {
-  return value
-    .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/__(.*?)__/g, "$1")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/\[(.*?)\]\((.*?)\)/g, "$1")
-    .trim();
-}
-
 function splitLineParts(line: string): string[] {
   return line
     .split("|")
@@ -39,6 +30,48 @@ function normalizeUrl(url: string): string {
   return `https://${url}`;
 }
 
+function normalizeIncomingSlug(input: unknown, fallbackTitle: string): string {
+  const raw = typeof input === "string" ? input.trim() : "";
+  if (!raw) return generateSlug(fallbackTitle || "post");
+
+  let slug = raw;
+
+  try {
+    if (/^https?:\/\//i.test(slug)) {
+      const url = new URL(slug);
+      slug = url.pathname || "";
+    }
+  } catch {
+    // ignore invalid URL and continue cleaning as text
+  }
+
+  slug = slug
+    .replace(/^https?:\/\/[^/]+/i, "")
+    .replace(/^\/+/, "")
+    .replace(/\/+$/, "")
+    .replace(/^posts?\//i, "")
+    .replace(/^blog\//i, "")
+    .split("/")
+    .filter(Boolean)
+    .pop() || "";
+
+  slug = slug
+    .replace(/\?.*$/, "")
+    .replace(/#.*$/, "")
+    .trim();
+
+  if (!slug) return generateSlug(fallbackTitle || "post");
+
+  const safe = slug
+    .toLowerCase()
+    .replace(/%[0-9a-f]{2}/gi, "")
+    .replace(/[^a-z0-9가-힣-_]+/gi, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return safe || generateSlug(fallbackTitle || "post");
+}
+
 function buildReferenceSection(inner: string): string {
   const items = inner
     .split("\n")
@@ -48,7 +81,12 @@ function buildReferenceSection(inner: string): string {
       const parts = splitLineParts(line);
       const url = normalizeUrl(parts[2] || parts[1] || "");
       const title = parts[0] || "참고 링크";
-      const desc = parts.length >= 3 ? parts[1] : parts[1] && !/^https?:\/\//i.test(parts[1]) ? parts[1] : "관련 정보를 확인할 수 있는 외부 페이지";
+      const desc =
+        parts.length >= 3
+          ? parts[1]
+          : parts[1] && !/^https?:\/\//i.test(parts[1])
+            ? parts[1]
+            : "관련 정보를 확인할 수 있는 외부 페이지";
 
       if (!url) {
         return `
@@ -377,11 +415,12 @@ export async function POST(req: NextRequest) {
     const rawContent = typeof body.content === "string" ? body.content : "";
     const isRichHtml = /<div|<section|<article|<p|<h[1-6]|<ul|<ol/i.test(rawContent);
     const content = isRichHtml ? rawContent : convertSpecialSections(rawContent);
+    const normalizedSlug = normalizeIncomingSlug(body.slug || body.url || body.permalink, body.title || "post");
 
     const post: Post = {
       id: body.id || `p_${Date.now()}`,
       title: body.title || "제목 없음",
-      slug: body.slug || generateSlug(body.title || "post"),
+      slug: normalizedSlug,
       content,
       excerpt: body.excerpt || makeExcerpt(content),
       category: body.category || "",

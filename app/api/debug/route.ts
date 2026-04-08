@@ -8,9 +8,17 @@ export async function GET() {
   });
   const ids = await redis.smembers("posts:ids");
   const posts = await Promise.all(ids.map(id => redis.hgetall(`post:${id}`)));
-  const result = await Promise.all((posts as any[]).filter(Boolean).map(async (post: any) => {
-    const slugVal = await redis.get(`slug:${post.slug}`);
-    return { id: post.id, slug: post.slug, title: post.title, slugKeyExists: !!slugVal, slugKeyValue: slugVal };
+  const result = (posts as any[]).filter(Boolean).map((post: any) => ({
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    contentLength: (post.content || "").length,
+    contentPreview: (post.content || "").slice(0, 200),
+    contentEnd: (post.content || "").slice(-200),
+    excerptLength: (post.excerpt || "").length,
+    excerpt: post.excerpt,
+    thumbnail: post.thumbnail,
+    published: post.published,
   }));
-  return NextResponse.json(result);
+  return NextResponse.json(result, { headers: { "Content-Type": "application/json; charset=utf-8" } });
 }

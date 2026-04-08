@@ -15,7 +15,7 @@ export async function getAllPosts(): Promise<Post[]> {
   if (!ids || ids.length === 0) return [];
   const posts = await Promise.all(ids.map((id) => redis.hgetall(`post:${id}`)));
   return (posts.filter(Boolean) as unknown as Post[])
-    .filter((p) => p.published)
+    .filter((p) => (p as any).published !== false && (p as any).published !== "false" && (p as any).published !== 0)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 

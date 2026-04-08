@@ -32,6 +32,30 @@ function renderContent(content: string): string {
 
 function extractToc(content: string) {
   const headings: { id: string; text: string; level: number }[] = [];
+  
+  // HTML content인 경우 h2, h3 태그에서 추출
+  if (content.includes("<h2") || content.includes("<h3")) {
+    const htmlHeadings = content.matchAll(/<h([23])[^>]*id="([^"]*)"[^>]*>(.*?)<\/h[23]>/gs);
+    for (const m of htmlHeadings) {
+      const level = parseInt(m[1]);
+      const id = m[2];
+      const text = m[3].replace(/<[^>]+>/g, "").trim();
+      if (text && id) headings.push({ id, text, level });
+    }
+    // id 없는 h2/h3도 추출
+    if (headings.length === 0) {
+      const htmlHeadings2 = content.matchAll(/<h([23])[^>]*>(.*?)<\/h[23]>/gs);
+      for (const m of htmlHeadings2) {
+        const level = parseInt(m[1]);
+        const text = m[2].replace(/<[^>]+>/g, "").trim();
+        const id = text.toLowerCase().replace(/[^\w가-힣]+/g, "-");
+        if (text) headings.push({ id, text, level });
+      }
+    }
+    return headings;
+  }
+
+  // 마크다운인 경우
   content.split("\n").forEach((line) => {
     const m = line.match(/^(#{1,3})\s+(.+)/);
     if (m) {
@@ -144,7 +168,7 @@ export default function PostDetailClient({ post, related, categories, settings }
               </div>
             </div>
 
-            <div ref={contentRef} className="prose" dangerouslySetInnerHTML={{ __html: html }} />
+            <div ref={contentRef} className="prose" style={{ maxWidth: "100%" }} dangerouslySetInnerHTML={{ __html: html }} />
 
             {post.tags && post.tags.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 36, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
@@ -190,4 +214,3 @@ export default function PostDetailClient({ post, related, categories, settings }
     </div>
   );
 }
-

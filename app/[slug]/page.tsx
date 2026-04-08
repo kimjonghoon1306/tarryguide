@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import PostDetailClient from "@/components/PostDetailClient";
 
-interface Props { params: { slug: string } }
+interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const post = await getPostBySlug(params.slug);
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
   if (!post) return { title: "Not Found" };
   return {
     title: post.title,
@@ -16,9 +17,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PostPage({ params }: Props) {
-  const decodedSlug = params.slug;
+  const { slug } = await params;
   const [post, allPosts, categories, settings] = await Promise.all([
-    getPostBySlug(decodedSlug),
+    getPostBySlug(slug),
     getAllPosts(),
     getCategories(),
     getSiteSettings(),
@@ -26,12 +27,11 @@ export default async function PostPage({ params }: Props) {
 
   if (!post) notFound();
 
-  // 조회수 증가 (비동기, 대기 안 함)
-  incrementViews(post.id).catch(() => {});
+  incrementViews(post!.id).catch(() => {});
 
   const related = allPosts
-    .filter((p) => p.id !== post.id && p.category === post.category)
+    .filter((p) => p.id !== post!.id && p.category === post!.category)
     .slice(0, 3);
 
-  return <PostDetailClient post={post} related={related} categories={categories} settings={settings} />;
+  return <PostDetailClient post={post!} related={related} categories={categories} settings={settings} />;
 }

@@ -156,3 +156,12 @@ body {
   .prose h1 { font-size: 1.5rem; }
   .prose h2 { font-size: 1.2rem; }
 }
+
+/* ─── BlogAuto Pro HTML content 보호 ─── */
+.prose div[style], .prose figure[style], .prose img[style] {
+  all: revert;
+}
+.prose [id="faq-section"], .prose [id="ref-section"] {
+  display: block !important;
+  visibility: visible !important;
+}

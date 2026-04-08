@@ -7,18 +7,20 @@ export async function GET() {
     token: process.env.KV_REST_API_TOKEN!,
   });
   const ids = await redis.smembers("posts:ids");
-  const posts = await Promise.all(ids.map(id => redis.hgetall(`post:${id}`)));
-  const result = (posts as any[]).filter(Boolean).map((post: any) => ({
-    id: post.id,
-    title: post.title,
-    slug: post.slug,
-    contentLength: (post.content || "").length,
-    contentPreview: (post.content || "").slice(0, 200),
-    contentEnd: (post.content || "").slice(-200),
-    excerptLength: (post.excerpt || "").length,
-    excerpt: post.excerpt,
-    thumbnail: post.thumbnail,
-    published: post.published,
+  const result = await Promise.all((ids as string[]).map(async (id) => {
+    const post = await redis.hgetall(`post:${id}`) as any;
+    if (!post) return null;
+    const content = post.content || "";
+    return {
+      id: post.id,
+      slug: post.slug,
+      title: post.title,
+      contentLength: content.length,
+      contentEnd: content.slice(-300),
+      hasFaq: content.includes("faq-section") || content.includes("자주 묻는 질문"),
+      hasRef: content.includes("ref-section") || content.includes("참고자료"),
+      hasRelated: content.includes("관련 글"),
+    };
   }));
-  return NextResponse.json(result, { headers: { "Content-Type": "application/json; charset=utf-8" } });
+  return NextResponse.json(result.filter(Boolean));
 }

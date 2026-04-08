@@ -1,10 +1,9 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import Header from "@/components/Header";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, Copy, Check, Share2, Eye, Clock, Calendar, Tag } from "lucide-react";
+import { ArrowLeft, Copy, Check, Share2, Eye, Clock, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { ko, enUS } from "date-fns/locale";
 import type { Post, Category, SiteSettings } from "@/lib/types";
@@ -83,49 +82,50 @@ export default function PostDetailClient({ post, related, categories, settings }
   const html = renderContent(post.content);
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+    <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
       <Header lang={lang} onLangChange={() => handleLang(lang === "ko" ? "en" : "ko")} />
 
-      {/* 썸네일 히어로 */}
+      {/* 썸네일 히어로 - 풀와이드 */}
       {post.thumbnail && (
-        <div className="relative h-72 md:h-96 pt-16">
-          <Image src={post.thumbnail} alt={post.title} fill className="object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-          {category && (
-            <div className="absolute bottom-6 left-6">
-              <span className="px-3 py-1.5 rounded-full text-sm font-bold text-white" style={{ background: category.color }}>
-                {category.icon} {lang === "ko" ? category.name : category.nameEn}
-              </span>
-            </div>
-          )}
+        <div style={{ width: "100%", height: "clamp(280px, 40vw, 520px)", position: "relative", overflow: "hidden" }}>
+          <img src={post.thumbnail} alt={post.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%)" }} />
         </div>
       )}
 
-      <div className={`max-w-7xl mx-auto px-4 ${post.thumbnail ? "pt-8" : "pt-28"} pb-16`}>
-        <div className="flex gap-8">
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: toc.length > 0 ? "minmax(0,1fr) 200px" : "1fr", gap: "0 40px", alignItems: "start" }}>
+
           {/* 본문 */}
-          <article className="flex-1 min-w-0 max-w-3xl">
+          <article style={{ paddingTop: 32, paddingBottom: 64, minWidth: 0 }}>
             {/* 뒤로가기 */}
-            <Link href="/" className="inline-flex items-center gap-2 mb-6 text-sm hover:opacity-70 transition-opacity" style={{ color: "var(--fg2)" }}>
-              <ArrowLeft className="w-4 h-4" /> {t[lang].goBack}
+            <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 24, fontSize: 13, color: "var(--fg3)", textDecoration: "none" }}>
+              <ArrowLeft style={{ width: 14, height: 14 }} /> 목록으로
             </Link>
 
+            {/* 카테고리 */}
+            {category && (
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 12 }}>
+                {lang === "ko" ? category.name : category.nameEn}
+              </div>
+            )}
+
             {/* 제목 */}
-            <h1 className="text-2xl md:text-4xl font-black leading-tight mb-5" style={{ color: "var(--fg)" }}>
+            <h1 style={{ fontFamily: "'Noto Serif KR', 'Playfair Display', serif", fontSize: "clamp(24px, 4vw, 40px)", fontWeight: 900, lineHeight: 1.3, color: "var(--fg)", marginBottom: 20, borderBottom: "2px solid var(--fg)", paddingBottom: 20 }}>
               {post.title}
             </h1>
 
             {/* 메타 */}
-            <div className="flex flex-wrap items-center gap-4 mb-8 pb-6 text-sm" style={{ borderBottom: "1px solid var(--border)", color: "var(--fg2)" }}>
-              <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{dateStr}</span>
-              <span className="flex items-center gap-1.5"><Eye className="w-4 h-4" />{post.views || 0} {t[lang].views}</span>
-              <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{readTime}{t[lang].minute} {t[lang].readTime}</span>
-              <div className="flex items-center gap-2 ml-auto">
-                <button onClick={handleCopy} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" style={{ color: "var(--fg2)" }}>
-                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, marginBottom: 32, fontSize: 12, color: "var(--fg3)" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Calendar style={{ width: 13, height: 13 }} />{dateStr}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Eye style={{ width: 13, height: 13 }} />{post.views || 0} {t[lang].views}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Clock style={{ width: 13, height: 13 }} />{readTime}{t[lang].minute} {t[lang].readTime}</span>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                <button onClick={handleCopy} style={{ padding: "6px 8px", background: "none", border: "1px solid var(--border)", cursor: "pointer", color: "var(--fg2)" }}>
+                  {copied ? <Check style={{ width: 13, height: 13 }} /> : <Copy style={{ width: 13, height: 13 }} />}
                 </button>
-                <button onClick={() => navigator.share?.({ title: post.title, url: window.location.href })} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors" style={{ color: "var(--fg2)" }}>
-                  <Share2 className="w-4 h-4" />
+                <button onClick={() => navigator.share?.({ title: post.title, url: window.location.href })} style={{ padding: "6px 8px", background: "none", border: "1px solid var(--border)", cursor: "pointer", color: "var(--fg2)" }}>
+                  <Share2 style={{ width: 13, height: 13 }} />
                 </button>
               </div>
             </div>
@@ -135,10 +135,9 @@ export default function PostDetailClient({ post, related, categories, settings }
 
             {/* 태그 */}
             {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-10 pt-6" style={{ borderTop: "1px solid var(--border)" }}>
-                <Tag className="w-4 h-4 mt-1 flex-shrink-0" style={{ color: "var(--fg2)" }} />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 40, paddingTop: 24, borderTop: "1px solid var(--border)" }}>
                 {post.tags.map((tag) => (
-                  <Link key={tag} href={`/?q=${encodeURIComponent(tag)}`} className="px-3 py-1 rounded-full text-sm font-medium hover:opacity-80 transition-opacity" style={{ background: "rgba(34,197,94,0.1)", color: "var(--brand)" }}>
+                  <Link key={tag} href={`/?q=${encodeURIComponent(tag)}`} style={{ padding: "4px 12px", fontSize: 12, background: "var(--bg2)", color: "var(--fg2)", textDecoration: "none", border: "1px solid var(--border)" }}>
                     #{tag}
                   </Link>
                 ))}
@@ -147,43 +146,40 @@ export default function PostDetailClient({ post, related, categories, settings }
 
             {/* 관련 글 */}
             {related.length > 0 && (
-              <section className="mt-14">
-                <h3 className="text-xl font-black mb-5" style={{ color: "var(--fg)" }}>{t[lang].relatedPosts}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <section style={{ marginTop: 56, paddingTop: 24, borderTop: "2px solid var(--fg)" }}>
+                <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 24, color: "var(--fg3)" }}>{t[lang].relatedPosts}</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 24 }}>
                   {related.map((p) => <PostCard key={p.id} post={p} view="grid" />)}
                 </div>
               </section>
             )}
           </article>
 
-          {/* 사이드바: TOC */}
+          {/* 사이드바: TOC - 모바일 숨김 */}
           {toc.length > 0 && (
-            <aside className="hidden lg:block w-64 flex-shrink-0">
-              <div className="sticky top-24">
-                <div className="rounded-2xl p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-                  <p className="text-sm font-black mb-4 uppercase tracking-widest" style={{ color: "var(--fg2)" }}>{t[lang].toc}</p>
-                  <nav className="flex flex-col gap-0.5">
-                    {toc.map((h) => (
-                      <a
-                        key={h.id}
-                        href={`#${h.id}`}
-                        className="text-sm py-1 transition-colors hover:text-green-500"
-                        style={{
-                          paddingLeft: `${(h.level - 1) * 12}px`,
-                          color: activeId === h.id ? "var(--brand)" : "var(--fg2)",
-                          fontWeight: activeId === h.id ? 600 : 400,
-                        }}
-                      >
-                        {h.text}
-                      </a>
-                    ))}
-                  </nav>
-                </div>
+            <aside style={{ paddingTop: 40, position: "sticky", top: 24, display: "var(--toc-display, block)" }}>
+              <style>{`@media(max-width:768px){aside{display:none!important}}`}</style>
+              <div style={{ borderTop: "2px solid var(--fg)", paddingTop: 16 }}>
+                <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--fg3)", marginBottom: 12 }}>{t[lang].toc}</p>
+                <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {toc.map((h) => (
+                    <a key={h.id} href={`#${h.id}`}
+                      style={{ fontSize: 12, padding: "4px 0", paddingLeft: `${(h.level - 1) * 10 + 8}px`, color: activeId === h.id ? "var(--brand)" : "var(--fg2)", fontWeight: activeId === h.id ? 700 : 400, textDecoration: "none", borderLeft: activeId === h.id ? "2px solid var(--brand)" : "2px solid transparent", transition: "all 0.15s" }}>
+                      {h.text}
+                    </a>
+                  ))}
+                </nav>
               </div>
             </aside>
           )}
         </div>
       </div>
+
+      {/* 푸터 */}
+      <footer style={{ borderTop: "3px solid var(--fg)", padding: "32px 24px", textAlign: "center" }}>
+        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 900, marginBottom: 8 }}>TarryGuide</div>
+        <div style={{ fontSize: 12, color: "var(--fg3)" }}>{settings.footerText || "© 2026 TarryGuide. All rights reserved."}</div>
+      </footer>
     </div>
   );
 }

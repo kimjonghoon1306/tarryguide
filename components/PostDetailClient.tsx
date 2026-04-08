@@ -12,6 +12,16 @@ import { t, calcReadTime } from "@/lib/i18n";
 import { marked } from "marked";
 
 function renderContent(content: string): string {
+  // HTML로 온 경우 그대로 사용
+  if (content.trim().startsWith("<") || content.includes("<div") || content.includes("<p>")) {
+    let html = content;
+    html = html.replace(/\[팁\](.*?)\[\/팁\]/gs, '<div class="tip-box">$1</div>');
+    html = html.replace(/\[주의\](.*?)\[\/주의\]/gs, '<div class="warning-box">$1</div>');
+    html = html.replace(/\[중요\](.*?)\[\/중요\]/gs, '<div class="important-box">$1</div>');
+    html = html.replace(/\[정보\](.*?)\[\/정보\]/gs, '<div class="info-box">$1</div>');
+    return html;
+  }
+  // 마크다운인 경우 변환
   let html = marked(content) as string;
   html = html.replace(/\[팁\](.*?)\[\/팁\]/gs, '<div class="tip-box">$1</div>');
   html = html.replace(/\[주의\](.*?)\[\/주의\]/gs, '<div class="warning-box">$1</div>');

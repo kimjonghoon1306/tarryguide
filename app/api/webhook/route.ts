@@ -67,6 +67,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const body = await req.json();
+    // 디버그: 받은 content 전체 길이와 끝부분 로그
+    console.log("[WEBHOOK] content length:", (body.content || "").length);
+    console.log("[WEBHOOK] content tail:", (body.content || "").slice(-500));
     const { content } = cleanContent(body.content || "");
 
     const post: Post = {

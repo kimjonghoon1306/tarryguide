@@ -197,13 +197,15 @@ export default function AdminPage() {
         .admin-sidebar { width: 200px; flex-shrink: 0; height: 100vh; position: sticky; top: 0; display: flex; flex-direction: column; background: var(--card); border-right: 1px solid var(--border); }
         .admin-main { flex: 1; overflow-y: auto; padding: 24px; }
         .admin-bottom-nav { display: none; }
+        .write-grid { display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
         @media (max-width: 767px) {
           .admin-layout { flex-direction: column; }
           .admin-sidebar { display: none; }
-          .admin-main { padding: 16px; padding-bottom: 80px; }
+          .admin-main { padding: 12px; padding-bottom: 80px; }
           .admin-bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); z-index: 100; }
           .admin-bottom-nav button { flex: 1; padding: 12px 4px 10px; font-size: 10px; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--fg2); }
-          .admin-bottom-nav button.active { color: #22c55e; }
+          .admin-bottom-nav button.active { color: #1a1a1a; font-weight: 700; }
+          .write-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -534,7 +536,7 @@ function WriteEditor({ post, categories, onSave, onCancel }: {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      <div className="write-grid">
         {/* 에디터 영역 */}
         <div className="xl:col-span-2">
           {/* 툴바 */}

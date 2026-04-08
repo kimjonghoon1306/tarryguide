@@ -28,15 +28,15 @@ export default function HomeClient({ posts, categories, settings }: {
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
 
         {/* 카테고리 필터 */}
-        <div style={{ display: "flex", gap: 8, padding: "20px 0", overflowX: "auto", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", gap: 0, padding: "16px 0", overflowX: "auto", borderBottom: "1px solid var(--border)" }}>
           <button onClick={() => setActiveCat("all")}
-            style={{ padding: "6px 16px", fontSize: 12, fontWeight: 700, border: "1px solid var(--fg)", background: activeCat === "all" ? "var(--fg)" : "transparent", color: activeCat === "all" ? "var(--bg)" : "var(--fg)", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}>
-            전체
+            style={{ padding: "7px 18px", fontSize: 11, fontWeight: 700, border: "none", borderRight: "1px solid var(--border)", background: activeCat === "all" ? "var(--fg)" : "transparent", color: activeCat === "all" ? "var(--bg)" : "var(--fg2)", cursor: "pointer", whiteSpace: "nowrap", letterSpacing: "0.08em", textTransform: "uppercase", transition: "all 0.15s" }}>
+            All
           </button>
           {categories.map(cat => (
             <button key={cat.id} onClick={() => setActiveCat(cat.id)}
-              style={{ padding: "6px 16px", fontSize: 12, fontWeight: 600, border: "1px solid var(--border)", background: activeCat === cat.id ? "var(--fg)" : "transparent", color: activeCat === cat.id ? "var(--bg)" : "var(--fg2)", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}>
-              {CATEGORY_ICONS[cat.id]} {cat.name}
+              style={{ padding: "7px 18px", fontSize: 11, fontWeight: 600, border: "none", borderRight: "1px solid var(--border)", background: activeCat === cat.id ? "var(--fg)" : "transparent", color: activeCat === cat.id ? "var(--bg)" : "var(--fg2)", cursor: "pointer", whiteSpace: "nowrap", letterSpacing: "0.05em", transition: "all 0.15s" }}>
+              {cat.name}
             </button>
           ))}
         </div>

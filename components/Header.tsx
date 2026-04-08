@@ -2,6 +2,15 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
+const CATEGORIES = [
+  { id: "life", name: "라이프" }, { id: "travel", name: "여행" },
+  { id: "food", name: "맛집/음식" }, { id: "money", name: "재테크" },
+  { id: "tech", name: "IT/테크" }, { id: "beauty", name: "뷰티/패션" },
+  { id: "health", name: "건강/운동" }, { id: "parenting", name: "육아" },
+  { id: "pets", name: "반려동물" }, { id: "interior", name: "인테리어" },
+  { id: "review", name: "리뷰" }, { id: "issue", name: "이슈/트렌드" },
+];
+
 export default function Header({ lang, onLangChange }: { lang: string; onLangChange: () => void }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -59,11 +68,20 @@ export default function Header({ lang, onLangChange }: { lang: string; onLangCha
       {/* 네비게이션 */}
       <nav style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", gap: 0 }}>
-            <Link href="/" style={{ padding: "12px 20px", fontSize: 13, fontWeight: 700, color: "var(--fg)", textDecoration: "none", borderRight: "1px solid var(--border)" }}>홈</Link>
-            <Link href="/admin" style={{ padding: "12px 20px", fontSize: 13, color: "var(--fg2)", textDecoration: "none", borderRight: "1px solid var(--border)" }}>관리자</Link>
+          <div style={{ display: "flex", gap: 0, overflowX: "auto" }}>
+            <Link href="/" style={{ padding: "12px 16px", fontSize: 12, fontWeight: 700, color: "var(--fg)", textDecoration: "none", whiteSpace: "nowrap", borderRight: "1px solid var(--border)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+              ALL
+            </Link>
+            {CATEGORIES.map((cat) => (
+              <Link key={cat.id} href={`/?cat=${cat.id}`}
+                style={{ padding: "12px 14px", fontSize: 12, color: "var(--fg2)", textDecoration: "none", whiteSpace: "nowrap", borderRight: "1px solid var(--border)", letterSpacing: "0.03em", transition: "color 0.15s" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "var(--brand)")}
+                onMouseLeave={e => (e.currentTarget.style.color = "var(--fg2)")}>
+                {cat.name}
+              </Link>
+            ))}
           </div>
-          <button onClick={() => setSearchOpen(!searchOpen)} style={{ padding: "8px 12px", background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", fontSize: 16 }}>
+          <button onClick={() => setSearchOpen(!searchOpen)} style={{ padding: "8px 12px", background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", fontSize: 16, flexShrink: 0 }}>
             🔍
           </button>
         </div>

@@ -99,3 +99,4 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return NextResponse.json({ status: "Webhook endpoint active", method: "POST" });
 }
+

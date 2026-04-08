@@ -168,7 +168,7 @@ export default function PostDetailClient({ post, related, categories, settings }
               </div>
             </div>
 
-            <div ref={contentRef} className="prose" style={{ maxWidth: "100%" }} dangerouslySetInnerHTML={{ __html: html }} />
+            <div ref={contentRef} style={{ lineHeight: 1.8, fontSize: "1.05rem", color: "var(--fg)", maxWidth: "100%", overflowX: "hidden" }} dangerouslySetInnerHTML={{ __html: html }} />
 
             {post.tags && post.tags.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 36, paddingTop: 20, borderTop: "1px solid var(--border)" }}>

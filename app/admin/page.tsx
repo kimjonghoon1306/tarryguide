@@ -191,49 +191,60 @@ export default function AdminPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen flex" style={{ background: "var(--bg)" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      <style>{`
+        .admin-layout { display: flex; min-height: 100vh; }
+        .admin-sidebar { width: 200px; flex-shrink: 0; height: 100vh; position: sticky; top: 0; display: flex; flex-direction: column; background: var(--card); border-right: 1px solid var(--border); }
+        .admin-main { flex: 1; overflow-y: auto; padding: 24px; }
+        .admin-bottom-nav { display: none; }
+        @media (max-width: 767px) {
+          .admin-layout { flex-direction: column; }
+          .admin-sidebar { display: none; }
+          .admin-main { padding: 16px; padding-bottom: 80px; }
+          .admin-bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); z-index: 100; }
+          .admin-bottom-nav button { flex: 1; padding: 12px 4px 10px; font-size: 10px; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--fg2); }
+          .admin-bottom-nav button.active { color: #22c55e; }
+        }
+      `}</style>
+
       {/* 토스트 */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl text-white text-sm font-semibold animate-slide-up ${toast.type === "ok" ? "bg-green-500" : "bg-red-500"}`}>
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl text-white text-sm font-semibold ${toast.type === "ok" ? "bg-green-500" : "bg-red-500"}`}>
           {toast.type === "ok" ? <Check className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
           {toast.msg}
         </div>
       )}
 
-      {/* 사이드바 */}
-      <aside className="w-56 flex-shrink-0 h-screen sticky top-0 flex flex-col" style={{ background: "var(--card)", borderRight: "1px solid var(--border)" }}>
-        <div className="p-5 border-b" style={{ borderColor: "var(--border)" }}>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm" style={{ background: "linear-gradient(135deg, #22c55e, #3b82f6)" }}>T</div>
-            <div>
-              <p className="font-black text-sm" style={{ color: "var(--fg)" }}>Admin</p>
-              <p className="text-xs" style={{ color: "var(--fg2)" }}>TarryGuide</p>
+      <div className="admin-layout">
+        {/* PC 사이드바 */}
+        <aside className="admin-sidebar">
+          <div className="p-4 border-b" style={{ borderColor: "var(--border)" }}>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm" style={{ background: "#1a1a1a" }}>T</div>
+              <div>
+                <p className="font-black text-sm" style={{ color: "var(--fg)" }}>Admin</p>
+                <p className="text-xs" style={{ color: "var(--fg2)" }}>TarryGuide</p>
+              </div>
             </div>
           </div>
-        </div>
-        <nav className="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => { setTab(id); setEditPost(null); setEditCat(null); }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left"
-              style={tab === id ? { background: "#22c55e", color: "white" } : { color: "var(--fg2)" }}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {label}
-            </button>
-          ))}
-        </nav>
-        <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
-          <Link href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/5" style={{ color: "var(--fg2)" }}>
-            <ArrowLeft className="w-4 h-4" /> 블로그 보기
-          </Link>
-        </div>
-      </aside>
+          <nav className="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button key={id} onClick={() => { setTab(id); setEditPost(null); setEditCat(null); }}
+                className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-left"
+                style={tab === id ? { background: "#1a1a1a", color: "white" } : { color: "var(--fg2)" }}>
+                <Icon className="w-4 h-4 flex-shrink-0" />{label}
+              </button>
+            ))}
+          </nav>
+          <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
+            <Link href="/" className="flex items-center gap-2 px-3 py-2 text-sm" style={{ color: "var(--fg2)", textDecoration: "none" }}>
+              <ArrowLeft className="w-4 h-4" /> 블로그 보기
+            </Link>
+          </div>
+        </aside>
 
-      {/* 메인 컨텐츠 */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6">
+        {/* 메인 */}
+        <main className="admin-main">
 
           {/* ─── 글 목록 ─── */}
           {tab === "posts" && !editPost && (
@@ -426,8 +437,22 @@ export default function AdminPage() {
             </div>
           )}
 
-        </div>
-      </main>
+        </main>
+      </div>
+
+      {/* 모바일 하단 탭 */}
+      <nav className="admin-bottom-nav">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button key={id} onClick={() => { setTab(id); setEditPost(null); setEditCat(null); }} className={tab === id ? "active" : ""}>
+            <Icon style={{ width: 18, height: 18 }} />
+            {label}
+          </button>
+        ))}
+        <Link href="/" style={{ flex: 1, padding: "12px 4px 10px", fontSize: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "var(--fg2)", textDecoration: "none" }}>
+          <ArrowLeft style={{ width: 18, height: 18 }} />
+          블로그
+        </Link>
+      </nav>
     </div>
   );
 }

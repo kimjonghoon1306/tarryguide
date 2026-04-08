@@ -190,3 +190,4 @@ export default function PostDetailClient({ post, related, categories, settings }
     </div>
   );
 }
+

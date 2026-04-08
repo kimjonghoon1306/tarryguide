@@ -159,10 +159,10 @@ export default function PostDetailClient({ post, related, categories, settings }
           {toc.length > 0 && (
             <aside className="detail-toc" style={{ paddingTop: 32, position: "sticky", top: 20 }}>
               <div style={{ borderTop: "2px solid var(--fg)", paddingTop: 14 }}>
-                <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--fg3)", marginBottom: 10 }}>{t[lang].toc}</p>
+                <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg2)", marginBottom: 12 }}>{t[lang].toc}</p>
                 <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   {toc.map((h) => (
-                    <a key={h.id} href={`#${h.id}`} style={{ fontSize: 12, padding: `4px 0 4px ${(h.level - 1) * 10 + 8}px`, color: activeId === h.id ? "var(--brand)" : "var(--fg2)", fontWeight: activeId === h.id ? 700 : 400, textDecoration: "none", borderLeft: activeId === h.id ? "2px solid var(--brand)" : "2px solid transparent", transition: "all 0.15s" }}>
+                    <a key={h.id} href={`#${h.id}`} style={{ fontSize: 13, padding: `5px 0 5px ${(h.level - 1) * 10 + 8}px`, color: activeId === h.id ? "var(--brand)" : "var(--fg2)", fontWeight: activeId === h.id ? 700 : 400, textDecoration: "none", borderLeft: activeId === h.id ? "2px solid var(--brand)" : "2px solid transparent", transition: "all 0.15s", lineHeight: 1.4 }}>
                       {h.text}
                     </a>
                   ))}

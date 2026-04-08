@@ -76,15 +76,18 @@ export default function PostDetailClient({ post, related, categories, settings }
   return (
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
       <style>{`
-        .detail-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-        .detail-grid { display: grid; grid-template-columns: minmax(0,1fr) 200px; gap: 0 40px; align-items: start; }
+        .detail-wrap { max-width: 100%; margin: 0 auto; padding: 0 40px; }
+        .detail-grid { display: grid; grid-template-columns: minmax(0,1fr) 220px; gap: 0 48px; align-items: start; }
         .detail-toc { display: block; }
-        .detail-article { padding-top: 32px; padding-bottom: 64px; min-width: 0; }
-        @media (max-width: 767px) {
-          .detail-wrap { padding: 0 14px; }
+        .detail-article { padding-top: 32px; padding-bottom: 80px; min-width: 0; }
+        @media (max-width: 1024px) {
+          .detail-wrap { padding: 0 24px; }
           .detail-grid { grid-template-columns: 1fr; }
           .detail-toc { display: none; }
-          .detail-article { padding-top: 20px; padding-bottom: 48px; }
+        }
+        @media (max-width: 767px) {
+          .detail-wrap { padding: 0 16px; }
+          .detail-article { padding-top: 20px; padding-bottom: 60px; }
           .meta-row { flex-wrap: wrap; gap: 10px !important; }
           .meta-actions { margin-left: 0 !important; }
         }

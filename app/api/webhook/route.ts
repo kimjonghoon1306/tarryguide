@@ -185,8 +185,32 @@ export async function POST(req: NextRequest) {
     const rawContent = body.content || "";
     const isHtml =
       rawContent.trim().startsWith("<") || rawContent.includes("<div") || rawContent.includes("<p>");
-    const cleaned = isHtml ? { content: rawContent, relatedLinks: [] as string[] } : cleanContent(rawContent);
-    const content = cleaned.content;
+    
+    let content: string;
+    if (isHtml) {
+      // HTML이지만 마크다운 섹션이 포함된 경우 처리
+      let html = rawContent;
+      let referenceHtml = "";
+      let relatedHtml = "";
+      let faqHtml = "";
+      
+      html = html.replace(/\[참고자료시작\]([\s\S]*?)\[참고자료끝\]/g, (_: string, inner: string) => {
+        referenceHtml = renderReferenceSection(inner.trim());
+        return "";
+      });
+      html = html.replace(/\[관련글시작\]([\s\S]*?)\[관련글끝\]/g, (_: string, inner: string) => {
+        relatedHtml = renderRelatedSection(inner.trim());
+        return "";
+      });
+      html = html.replace(/\[FAQ시작\]([\s\S]*?)\[FAQ끝\]/g, (_: string, inner: string) => {
+        faqHtml = renderFaqSection(inner.trim());
+        return "";
+      });
+      html = html.replace(/\[[^\]]+시작\]/g, "").replace(/\[[^\]]+끝\]/g, "");
+      content = `${html}${faqHtml}${referenceHtml}${relatedHtml}`.trim();
+    } else {
+      content = cleanContent(rawContent).content;
+    }
 
     const post: Post = {
       id: body.id || "p_" + Date.now(),

@@ -71,8 +71,11 @@ export function calcReadTime(content: string): number {
 export function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^\w\s가-힣]/g, "")
+    .replace(/[가-힣]/g, "")
+    .replace(/[^\w\s-]/g, "")
     .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .substring(0, 80) + "-" + Date.now().toString(36);
+    .substring(0, 60)
+    .replace(/^-+|-+$/g, "") + "-" + Date.now().toString(36);
 }

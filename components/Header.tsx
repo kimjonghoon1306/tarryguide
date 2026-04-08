@@ -49,6 +49,9 @@ export default function Header({ lang, onLangChange }: { lang: string; onLangCha
             <button onClick={onLangChange} style={{ fontSize: 12, color: "var(--fg3)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
               {lang === "ko" ? "EN" : "KO"}
             </button>
+            <Link href="/admin" style={{ fontSize: 16, color: "var(--fg3)", textDecoration: "none", lineHeight: 1 }} title="관리자">
+              ⚙
+            </Link>
           </div>
         </div>
       </div>

@@ -16,8 +16,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PostPage({ params }: Props) {
+  const decodedSlug = params.slug;
   const [post, allPosts, categories, settings] = await Promise.all([
-    getPostBySlug(params.slug),
+    getPostBySlug(decodedSlug),
     getAllPosts(),
     getCategories(),
     getSiteSettings(),

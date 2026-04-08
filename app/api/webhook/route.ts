@@ -17,13 +17,13 @@ function nl2br(text: string): string {
 }
 
 function renderReferenceSection(inner: string): string {
-  const lines = inner
+  const lines: string[] = inner
     .split("\n")
-    .map((line) => line.trim())
+    .map((line: string) => line.trim())
     .filter(Boolean);
 
   const items = lines
-    .map((line) => {
+    .map((line: string) => {
       const m = line.match(/^(.*?)(https?:\/\/\S+)$/);
       if (!m) return "";
       const label = m[1].trim();
@@ -50,14 +50,14 @@ function renderReferenceSection(inner: string): string {
 }
 
 function renderRelatedSection(inner: string): string {
-  const lines = inner
+  const lines: string[] = inner
     .split("\n")
-    .map((line) => line.trim())
+    .map((line: string) => line.trim())
     .filter(Boolean);
 
   const items = lines
-    .map((line) => {
-      const parts = line.split("|").map((v) => v.trim());
+    .map((line: string) => {
+      const parts = line.split("|").map((v: string) => v.trim());
       const title = parts[0] || "";
       const desc = parts[1] || "관련 글입니다.";
       if (!title) return "";
@@ -80,13 +80,13 @@ function renderRelatedSection(inner: string): string {
 }
 
 function renderFaqSection(inner: string): string {
-  const blocks = inner
+  const blocks: string[] = inner
     .split(/\n\s*\n/)
-    .map((block) => block.trim())
+    .map((block: string) => block.trim())
     .filter(Boolean);
 
   const items = blocks
-    .map((block) => {
+    .map((block: string) => {
       const q = block.match(/Q\.\s*(.+)/)?.[1]?.trim();
       const a = block.match(/A\.\s*([\s\S]+)/)?.[1]?.trim();
       if (!q || !a) return "";
@@ -118,15 +118,15 @@ function cleanContent(raw: string): { content: string; relatedLinks: string[] } 
   content = content.replace(/- 정렬:[^\n]*/g, "").trim();
 
   let referenceHtml = "";
-  content = content.replace(/\[참고자료시작\]([\s\S]*?)\[참고자료끝\]/g, (_, inner) => {
+  content = content.replace(/\[참고자료시작\]([\s\S]*?)\[참고자료끝\]/g, (_match: string, inner: string) => {
     referenceHtml = renderReferenceSection(inner.trim());
     return "";
   });
 
   let relatedHtml = "";
-  content = content.replace(/\[관련글시작\]([\s\S]*?)\[관련글끝\]/g, (_, inner) => {
-    const lines = inner.trim().split("\n").filter(Boolean);
-    lines.forEach((line) => {
+  content = content.replace(/\[관련글시작\]([\s\S]*?)\[관련글끝\]/g, (_match: string, inner: string) => {
+    const lines: string[] = inner.trim().split("\n").filter(Boolean);
+    lines.forEach((line: string) => {
       const parts = line.split("|");
       if (parts[0]?.trim()) relatedLinks.push(parts[0].trim());
     });
@@ -135,7 +135,7 @@ function cleanContent(raw: string): { content: string; relatedLinks: string[] } 
   });
 
   let faqHtml = "";
-  content = content.replace(/\[FAQ시작\]([\s\S]*?)\[FAQ끝\]/g, (_, inner) => {
+  content = content.replace(/\[FAQ시작\]([\s\S]*?)\[FAQ끝\]/g, (_match: string, inner: string) => {
     faqHtml = renderFaqSection(inner.trim());
     return "";
   });
@@ -144,9 +144,9 @@ function cleanContent(raw: string): { content: string; relatedLinks: string[] } 
 
   const bodyHtml = content
     .split(/\n{2,}/)
-    .map((block) => block.trim())
+    .map((block: string) => block.trim())
     .filter(Boolean)
-    .map((block) => {
+    .map((block: string) => {
       if (/^#{1,6}\s+/.test(block)) {
         const m = block.match(/^(#{1,6})\s+(.+)$/);
         if (!m) return `<p>${nl2br(block)}</p>`;
@@ -162,14 +162,16 @@ function cleanContent(raw: string): { content: string; relatedLinks: string[] } 
 }
 
 function makeExcerpt(content: string): string {
-  return content
-    .replace(/#{1,6}\s/g, "")
-    .replace(/\[.*?\]/g, "")
-    .replace(/[*_`>-]/g, "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 150) + "...";
+  return (
+    content
+      .replace(/#{1,6}\s/g, "")
+      .replace(/\[.*?\]/g, "")
+      .replace(/[*_`>-]/g, "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 150) + "..."
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -181,18 +183,23 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const rawContent = body.content || "";
-    const isHtml = rawContent.trim().startsWith("<") || rawContent.includes("<div") || rawContent.includes("<p>");
-    const cleaned = isHtml ? { content: rawContent, relatedLinks: [] } : cleanContent(rawContent);
+    const isHtml =
+      rawContent.trim().startsWith("<") || rawContent.includes("<div") || rawContent.includes("<p>");
+    const cleaned = isHtml ? { content: rawContent, relatedLinks: [] as string[] } : cleanContent(rawContent);
     const content = cleaned.content;
 
     const post: Post = {
-      id: body.id || ("p_" + Date.now()),
+      id: body.id || "p_" + Date.now(),
       title: body.title || "제목 없음",
       slug: generateSlug(body.title || "post"),
       content,
       excerpt: body.excerpt || makeExcerpt(content),
       category: body.category || "",
-      tags: Array.isArray(body.tags) ? body.tags : (body.tags ? body.tags.split(",").map((t: string) => t.trim()) : []),
+      tags: Array.isArray(body.tags)
+        ? body.tags
+        : body.tags
+          ? body.tags.split(",").map((t: string) => t.trim())
+          : [],
       thumbnail: body.thumbnail || body.image || "",
       author: body.author || "TarryGuide",
       lang: body.lang || "ko",

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const post: Post = {
       id: body.id || ("p_" + Date.now()),
       title: body.title || "제목 없음",
-      slug: body.slug || generateSlug(body.title || "post"),
+      slug: generateSlug(body.title || "post"),
       content: body.content || "",
       excerpt: body.excerpt || (body.content || "").replace(/<[^>]+>/g, "").slice(0, 150) + "...",
       category: body.category || "",

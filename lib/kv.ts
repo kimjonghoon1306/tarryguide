@@ -102,6 +102,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   analyticsId: "",
   primaryColor: "#22c55e",
   footerText: "© 2026 TarryGuide. All rights reserved.",
+  ogImage: "",
   socialLinks: {},
 };
 

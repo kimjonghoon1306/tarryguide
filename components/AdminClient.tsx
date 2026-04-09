@@ -99,21 +99,21 @@ export default function AdminClient() {
 
   // ── 새 글 쓰기 ────────────────────────────────────────
   const startNewPost = () => {
-    const blank: Post = {
+    const blank = {
       id: "new_" + Date.now(),
       title: "",
       content: "",
       excerpt: "",
       slug: "",
       category: "life",
-      tags: [],
+      tags: [] as string[],
       published: false,
       views: 0,
       author: "TarryGuide",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       thumbnail: "",
-    };
+    } as Post;
     setEditPost(blank);
     setEditTitle("");
     setEditContent("");

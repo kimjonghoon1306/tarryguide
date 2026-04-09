@@ -16,6 +16,7 @@ export default async function HomePage() {
     analyticsId: "",
     primaryColor: "#22c55e",
     footerText: "© 2026 TarryGuide. All rights reserved.",
+    ogImage: "",
     socialLinks: {},
   };
 
@@ -25,4 +26,3 @@ export default async function HomePage() {
 
   return <HomeClient posts={posts} categories={categories} settings={settings} />;
 }
-

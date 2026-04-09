@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: settings.siteName,
       locale: "ko_KR",
       type: "website",
-      images: (settings as any).ogImage ? [{ url: (settings as any).ogImage, width: 1200, height: 630 }] : [],
+      images: settings.ogImage ? [{ url: settings.ogImage, width: 1200, height: 630 }] : [],
     },
     robots: { index: true, follow: true },
     verification: { google: "" },

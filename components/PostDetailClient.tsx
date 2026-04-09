@@ -3,12 +3,14 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, Copy, Check, Share2, Eye, Clock, Calendar } from "lucide-react";
+import { ArrowLeft, Eye, Clock, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { ko, enUS } from "date-fns/locale";
 import type { Post, Category, SiteSettings } from "@/lib/types";
 import type { Lang } from "@/lib/i18n";
 import { t, calcReadTime } from "@/lib/i18n";
+import ShareButtons from "@/components/ShareButtons";
+import Footer from "@/components/Footer";
 import { marked } from "marked";
 
 function renderContent(content: string): string {
@@ -71,7 +73,6 @@ interface Props { post: Post; related: Post[]; categories: Category[]; settings:
 
 export default function PostDetailClient({ post, related, categories, settings }: Props) {
   const [lang, setLang] = useState<Lang>("ko");
-  const [copied, setCopied] = useState(false);
   const [activeId, setActiveId] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -94,12 +95,6 @@ export default function PostDetailClient({ post, related, categories, settings }
   }, [post.content]);
 
   const handleLang = (l: Lang) => { setLang(l); localStorage.setItem("blog_lang", l); };
-  const handleCopy = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const category = categories.find((c) => c.id === post.category);
   const locale = lang === "ko" ? ko : enUS;
   const dateStr = format(new Date(post.createdAt), lang === "ko" ? "yyyy년 M월 d일" : "MMMM d, yyyy", { locale });
@@ -158,14 +153,7 @@ export default function PostDetailClient({ post, related, categories, settings }
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Calendar style={{ width: 12, height: 12 }} />{dateStr}</span>
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Eye style={{ width: 12, height: 12 }} />{post.views || 0} {t[lang].views}</span>
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Clock style={{ width: 12, height: 12 }} />{readTime}{t[lang].minute} {t[lang].readTime}</span>
-              <div className="meta-actions" style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
-                <button onClick={handleCopy} style={{ padding: "6px 8px", background: "none", border: "1px solid var(--border)", cursor: "pointer", color: "var(--fg2)" }}>
-                  {copied ? <Check style={{ width: 12, height: 12 }} /> : <Copy style={{ width: 12, height: 12 }} />}
-                </button>
-                <button onClick={() => navigator.share?.({ title: post.title, url: window.location.href })} style={{ padding: "6px 8px", background: "none", border: "1px solid var(--border)", cursor: "pointer", color: "var(--fg2)" }}>
-                  <Share2 style={{ width: 12, height: 12 }} />
-                </button>
-              </div>
+
             </div>
 
             <div ref={contentRef} style={{ lineHeight: 1.8, fontSize: "1.05rem", color: "var(--fg)", maxWidth: "100%", overflowX: "hidden" }} dangerouslySetInnerHTML={{ __html: html }} />
@@ -179,6 +167,11 @@ export default function PostDetailClient({ post, related, categories, settings }
                 ))}
               </div>
             )}
+
+            {/* 공유하기 */}
+            <div style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
+              <ShareButtons title={post.title} />
+            </div>
 
             {related.length > 0 && (
               <section style={{ marginTop: 48, paddingTop: 20, borderTop: "2px solid var(--fg)" }}>
@@ -207,10 +200,7 @@ export default function PostDetailClient({ post, related, categories, settings }
         </div>
       </div>
 
-      <footer style={{ borderTop: "3px solid var(--fg)", padding: "28px 16px", textAlign: "center" }}>
-        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900, marginBottom: 6 }}>TarryGuide</div>
-        <div style={{ fontSize: 12, color: "var(--fg3)" }}>{settings.footerText || "© 2026 TarryGuide. All rights reserved."}</div>
-      </footer>
+      <Footer settings={settings} />
     </div>
   );
 }

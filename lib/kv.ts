@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import type { Post, Category, SiteSettings } from "./types";
+import type { Post, Category, SiteSettings, PopupNotice } from "./types";
 
 function getRedis() {
   return new Redis({
@@ -116,4 +116,42 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 export async function saveSiteSettings(settings: SiteSettings): Promise<void> {
   const redis = getRedis();
   await redis.set("site:settings", JSON.stringify(settings));
+}
+
+// ─── Popup Notices ────────────────────────────────────────
+export async function getPopupNotices(): Promise<PopupNotice[]> {
+  const redis = getRedis();
+  const data = await redis.get("popup:notices");
+  if (!data) return [];
+  return typeof data === "string" ? JSON.parse(data) : (data as PopupNotice[]);
+}
+
+export async function savePopupNotices(notices: PopupNotice[]): Promise<void> {
+  const redis = getRedis();
+  await redis.set("popup:notices", JSON.stringify(notices));
+}
+
+export async function getActivePopup(): Promise<PopupNotice | null> {
+  const notices = await getPopupNotices();
+  const now = new Date();
+  return notices.find(n => {
+    if (!n.active) return false;
+    const start = new Date(n.startDate);
+    const end = new Date(n.endDate);
+    return now >= start && now <= end;
+  }) || null;
+}
+
+// ─── Admin Password ───────────────────────────────────────
+export async function getAdminPassword(): Promise<string> {
+  const redis = getRedis();
+  const stored = await redis.get("admin:password");
+  if (stored && typeof stored === "string") return stored;
+  // 환경변수 초기값 → KV에 없으면 env 사용
+  return process.env.ADMIN_PASSWORD || "123456";
+}
+
+export async function saveAdminPassword(password: string): Promise<void> {
+  const redis = getRedis();
+  await redis.set("admin:password", password);
 }

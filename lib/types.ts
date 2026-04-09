@@ -44,3 +44,16 @@ export interface SiteSettings {
     email?: string;
   };
 }
+
+export interface PopupNotice {
+  id: string;
+  title: string;
+  content: string;
+  active: boolean;
+  startDate: string;
+  endDate: string;
+  bgColor: string;
+  textColor: string;
+  showOnce: boolean;
+  createdAt: string;
+}

@@ -25,6 +25,7 @@ export default function AdminClient() {
   const [editPost, setEditPost] = useState<Post | null>(null);
   const [editContent, setEditContent] = useState("");
   const [editTitle, setEditTitle] = useState("");
+  const [isNewPost, setIsNewPost] = useState(false);
 
   // 팝업 편집 상태
   const [editPopup, setEditPopup] = useState<PopupNotice | null>(null);
@@ -78,13 +79,45 @@ export default function AdminClient() {
   const savePost = async () => {
     if (!editPost) return;
     const updated = { ...editPost, title: editTitle, content: editContent, updatedAt: new Date().toISOString() };
-    await fetch("/api/admin", {
-      method: "PUT", headers: { "x-admin-pw": pw, "Content-Type": "application/json" },
-      body: JSON.stringify({ resource: "post", data: updated })
-    });
-    setPosts(prev => prev.map(p => p.id === updated.id ? updated : p));
+    if (isNewPost) {
+      await fetch("/api/admin", {
+        method: "POST", headers: { "x-admin-pw": pw, "Content-Type": "application/json" },
+        body: JSON.stringify({ resource: "post", data: updated })
+      });
+      setPosts(prev => [updated, ...prev]);
+    } else {
+      await fetch("/api/admin", {
+        method: "PUT", headers: { "x-admin-pw": pw, "Content-Type": "application/json" },
+        body: JSON.stringify({ resource: "post", data: updated })
+      });
+      setPosts(prev => prev.map(p => p.id === updated.id ? updated : p));
+    }
     setEditPost(null);
-    showMsg("저장되었습니다 ✅");
+    setIsNewPost(false);
+    showMsg(isNewPost ? "글이 작성되었습니다 ✅" : "저장되었습니다 ✅");
+  };
+
+  // ── 새 글 쓰기 ────────────────────────────────────────
+  const startNewPost = () => {
+    const blank: Post = {
+      id: "new_" + Date.now(),
+      title: "",
+      content: "",
+      excerpt: "",
+      slug: "",
+      category: "life",
+      tags: [],
+      published: false,
+      views: 0,
+      author: "TarryGuide",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      thumbnail: "",
+    };
+    setEditPost(blank);
+    setEditTitle("");
+    setEditContent("");
+    setIsNewPost(true);
   };
 
   // ── 발행/비발행 토글 ──────────────────────────────────
@@ -200,9 +233,9 @@ export default function AdminClient() {
     return (
       <div style={{ minHeight: "100vh", background: "var(--bg)", padding: "0 0 60px" }}>
         <div style={{ background: "var(--fg)", color: "var(--bg)", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 }}>
-          <span style={{ fontWeight: 800, fontSize: 15 }}>✏️ 글 수정</span>
+          <span style={{ fontWeight: 800, fontSize: 15 }}>{isNewPost ? "✏️ 새 글 쓰기" : "✏️ 글 수정"}</span>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setEditPost(null)} style={{ padding: "7px 14px", background: "rgba(255,255,255,0.15)", color: "var(--bg)", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13 }}>취소</button>
+            <button onClick={() => { setEditPost(null); setIsNewPost(false); }} style={{ padding: "7px 14px", background: "rgba(255,255,255,0.15)", color: "var(--bg)", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13 }}>취소</button>
             <button onClick={savePost} style={{ padding: "7px 16px", background: "#22c55e", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700 }}>저장</button>
           </div>
         </div>
@@ -215,6 +248,42 @@ export default function AdminClient() {
               style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg)", fontSize: 16, borderRadius: 8, outline: "none", boxSizing: "border-box" }}
             />
           </div>
+          {isNewPost && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--fg3)", display: "block", marginBottom: 6 }}>슬러그 (URL)</label>
+                <input
+                  value={editPost?.slug || ""}
+                  onChange={e => setEditPost(prev => prev ? { ...prev, slug: e.target.value } : prev)}
+                  placeholder="my-post-slug"
+                  style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg)", fontSize: 13, borderRadius: 8, outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--fg3)", display: "block", marginBottom: 6 }}>카테고리</label>
+                <select
+                  value={editPost?.category || "life"}
+                  onChange={e => setEditPost(prev => prev ? { ...prev, category: e.target.value } : prev)}
+                  style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg)", fontSize: 13, borderRadius: 8, outline: "none", boxSizing: "border-box" }}
+                >
+                  {[["life","라이프"],["travel","여행"],["food","맛집/음식"],["money","재테크"],["tech","IT/테크"],["beauty","뷰티/패션"],["health","건강/운동"],["parenting","육아"],["pets","반려동물"],["interior","인테리어"],["review","리뷰"],["issue","이슈/트렌드"]].map(([id, name]) => (
+                    <option key={id} value={id}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--fg3)", display: "block", marginBottom: 6 }}>발행 상태</label>
+                <select
+                  value={editPost?.published ? "true" : "false"}
+                  onChange={e => setEditPost(prev => prev ? { ...prev, published: e.target.value === "true" } : prev)}
+                  style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg)", fontSize: 13, borderRadius: 8, outline: "none", boxSizing: "border-box" }}
+                >
+                  <option value="false">숨김</option>
+                  <option value="true">발행</option>
+                </select>
+              </div>
+            </div>
+          )}
           <div>
             <label style={{ fontSize: 12, fontWeight: 700, color: "var(--fg3)", display: "block", marginBottom: 6 }}>내용 (HTML)</label>
             <textarea
@@ -326,12 +395,18 @@ export default function AdminClient() {
           <a href="/" style={{ color: "var(--bg)", fontSize: 20, textDecoration: "none" }}>⟵</a>
           <span style={{ fontWeight: 900, fontSize: 16 }}>⚙️ TarryGuide 관리자</span>
         </div>
-        <button
-          onClick={() => { sessionStorage.removeItem(PW_KEY); setAuthed(false); setPw(""); }}
-          style={{ padding: "6px 12px", background: "rgba(255,255,255,0.15)", color: "var(--bg)", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12 }}
-        >
-          로그아웃
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <a href="/" target="_blank" rel="noreferrer"
+            style={{ padding: "6px 12px", background: "rgba(255,255,255,0.15)", color: "var(--bg)", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            🏠 블로그 보기
+          </a>
+          <button
+            onClick={() => { sessionStorage.removeItem(PW_KEY); setAuthed(false); setPw(""); }}
+            style={{ padding: "6px 12px", background: "rgba(255,255,255,0.15)", color: "var(--bg)", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12 }}
+          >
+            로그아웃
+          </button>
+        </div>
       </div>
 
       {/* 알림 */}
@@ -358,6 +433,10 @@ export default function AdminClient() {
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
               <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--fg)" }}>전체 글 ({posts.length})</h2>
+              <button onClick={startNewPost}
+                style={{ padding: "8px 16px", background: "var(--brand)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
+                ✏️ 새 글 쓰기
+              </button>
             </div>
             {posts.length === 0 ? (
               <div style={{ textAlign: "center", padding: "60px 0", color: "var(--fg3)" }}>아직 발행된 글이 없습니다</div>

@@ -36,6 +36,7 @@ export interface SiteSettings {
   analyticsId: string;
   primaryColor: string;
   footerText: string;
+  ogImage: string;
   socialLinks: {
     twitter?: string;
     instagram?: string;

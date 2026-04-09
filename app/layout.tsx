@@ -9,7 +9,12 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: settings.siteName, template: `%s | ${settings.siteName}` },
     description: settings.tagline,
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://tarryguide.com"),
-    openGraph: { siteName: settings.siteName, locale: "ko_KR", type: "website" },
+    openGraph: {
+      siteName: settings.siteName,
+      locale: "ko_KR",
+      type: "website",
+      images: (settings as any).ogImage ? [{ url: (settings as any).ogImage, width: 1200, height: 630 }] : [],
+    },
     robots: { index: true, follow: true },
     verification: { google: "" },
   };

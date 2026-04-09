@@ -25,3 +25,4 @@ export default async function HomePage() {
 
   return <HomeClient posts={posts} categories={categories} settings={settings} />;
 }
+

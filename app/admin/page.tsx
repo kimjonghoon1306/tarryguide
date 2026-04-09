@@ -319,6 +319,7 @@ export default function AdminPage() {
           {/* ─── 글 쓰기/수정 ─── */}
           {tab === "write" && (
             <WriteEditor
+              key={editPost?.id || "new"}
               post={editPost || {}}
               categories={categories}
               onSave={savePost}
@@ -391,6 +392,24 @@ export default function AdminPage() {
                   <SettingField label="소개 문구 (영문)" value={settings.tagline} onChange={(v) => setSettings({ ...settings, tagline: v })} />
                   <SettingField label="소개 문구 (한글)" value={settings.taglineKo} onChange={(v) => setSettings({ ...settings, taglineKo: v })} />
                   <SettingField label="푸터 텍스트" value={settings.footerText} onChange={(v) => setSettings({ ...settings, footerText: v })} />
+                </SettingCard>
+                <SettingCard title="공유 이미지 (OG Image)">
+                  <p className="text-xs" style={{ color: "var(--fg2)" }}>SNS·카카오 링크 공유 시 보이는 대표 이미지</p>
+                  <SettingField label="OG 이미지 URL" value={settings.ogImage || ""} onChange={(v) => setSettings({ ...settings, ogImage: v })} placeholder="https://..." />
+                  {/* 파일 직접 업로드 */}
+                  <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold px-3 py-2.5 rounded-xl"
+                    style={{ background: "var(--bg2)", border: "2px dashed var(--border)", color: "var(--fg2)" }}>
+                    <Upload className="w-4 h-4" />
+                    파일로 업로드
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => setSettings({ ...settings, ogImage: reader.result as string });
+                      reader.readAsDataURL(file);
+                    }} />
+                  </label>
+                  {settings.ogImage && <img src={settings.ogImage} alt="OG preview" className="w-full rounded-xl object-cover" style={{ maxHeight: 160 }} />}
                 </SettingCard>
                 <SettingCard title="광고 & 분석">
                   <SettingField label="Google AdSense ID" value={settings.adsenseId} onChange={(v) => setSettings({ ...settings, adsenseId: v })} placeholder="ca-pub-xxxxxxxxxxxxxxxx" />
@@ -618,11 +637,25 @@ function WriteEditor({ post, categories, onSave, onCancel }: {
 
           {/* 썸네일 */}
           <div className="p-5 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-            <p className="font-bold mb-3 text-sm" style={{ color: "var(--fg)" }}>썸네일 URL</p>
+            <p className="font-bold mb-3 text-sm" style={{ color: "var(--fg)" }}>썸네일</p>
+            {/* 파일 업로드 */}
+            <label className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer mb-2"
+              style={{ background: "var(--bg2)", border: "2px dashed var(--border)", color: "var(--fg2)" }}>
+              <Upload className="w-4 h-4" />
+              이미지 파일 선택
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => set("thumbnail", reader.result as string);
+                reader.readAsDataURL(file);
+              }} />
+            </label>
+            {/* URL 직접 입력 */}
             <input
-              value={data.thumbnail || ""}
+              value={data.thumbnail?.startsWith("data:") ? "" : (data.thumbnail || "")}
               onChange={(e) => set("thumbnail", e.target.value)}
-              placeholder="https://..."
+              placeholder="또는 URL 직접 입력 (https://...)"
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
               style={{ background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--fg)" }}
             />

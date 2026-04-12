@@ -212,13 +212,10 @@ export async function POST(req: NextRequest) {
       content = cleanContent(rawContent).content;
     }
 
-    const postId = body.id || "p_" + Date.now();
-    const baseSlug = generateSlug(body.title || "post");
-    const uniqueSlug = `${baseSlug}-${Date.now()}`;
     const post: Post = {
-      id: postId,
+      id: body.id || "p_" + Date.now(),
       title: body.title || "제목 없음",
-      slug: uniqueSlug,
+      slug: generateSlug(body.title || "post"),
       content,
       excerpt: body.excerpt || makeExcerpt(content),
       category: body.category || "",
